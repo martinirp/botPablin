@@ -1,55 +1,32 @@
-import os
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from dotenv import load_dotenv
 import time
+import pickle
 
-# Carregar variáveis do arquivo .env
-load_dotenv()
-email = os.getenv("EMAIL")
-senha = os.getenv("SENHA")
+# Caminho do ChromeDriver
+chromedriver_path = '/usr/local/bin/chromedriver'  # Modifique conforme o seu caso
 
-# Verificar se as variáveis de ambiente foram carregadas corretamente
-if not email or not senha:
-    print("Erro: As variáveis de ambiente não foram carregadas corretamente.")
-    exit(1)
+# Inicializar o navegador
+options = webdriver.ChromeOptions()
+driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
 
-# Configurações do ChromeDriver
-options = Options()
-options.add_argument("--no-sandbox")  # Evitar o erro "DevToolsActivePort"
-options.add_argument("--disable-dev-shm-usage")  # Evitar uso excessivo de memória
-options.add_argument("--disable-gpu")
-options.add_argument("--headless")  # Opcional, se você quiser rodar sem interface gráfica
+# Acessar o YouTube
+driver.get("https://www.youtube.com")
 
-# Defina o caminho correto do seu chromedriver
-service = Service('/usr/lib/chromium-browser/chromedriver')  # Ajuste o caminho conforme necessário
-driver = webdriver.Chrome(service=service, options=options)
+# Esperar para o usuário fazer login manualmente
+print("Por favor, faça o login manualmente no YouTube. O script irá esperar por 30 segundos após a página carregar.")
+time.sleep(10)  # Dê tempo suficiente para você fazer o login
 
-try:
-    # Acesse a página de login
-    driver.get("https://accounts.google.com/signin")
+# Após login, você pode interagir com o navegador para pegar os cookies
 
-    print("Aguarde, o navegador está aberto. Faça o login manualmente.")
+# Salvar os cookies após login
+cookies = driver.get_cookies()
 
-    # Esperar um tempo para o login manual (dá tempo de você inserir o email e senha)
-    time.sleep(60)  # Ajuste o tempo conforme necessário para você realizar o login
+# Salvar os cookies em um arquivo
+with open("youtube_cookies.pkl", "wb") as cookie_file:
+    pickle.dump(cookies, cookie_file)
 
-    # Capturar os cookies após o login
-    cookies = driver.get_cookies()
+print("Cookies salvos com sucesso!")
 
-    # Exibir os cookies para verificação
-    print("Cookies capturados após o login:")
-    for cookie in cookies:
-        print(cookie)
-
-    print("Login concluído com sucesso!")
-
-except Exception as e:
-    print(f"Erro: {e}")
-
-finally:
-    # Aguardar a interação manual antes de fechar o navegador
-    input("Pressione Enter para fechar o navegador...")
-    driver.quit()
+# Fechar o navegador
+driver.quit()
