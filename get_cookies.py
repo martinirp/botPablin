@@ -1,36 +1,21 @@
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-import time
-import pickle
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 
-# Configuração do caminho do Chromium (via Snap)
-chrome_options = Options()
-chrome_options.binary_location = "/snap/bin/chromium"  # Caminho correto do Chromium no Snap
+# Configurar opções do Firefox
+firefox_options = Options()
+firefox_options.add_argument("--headless")  # Opcional: roda o Firefox em modo headless (sem interface gráfica)
 
-# Adiciona a opção --no-sandbox
-chrome_options.add_argument('--no-sandbox')
-chrome_options.add_argument('--disable-dev-shm-usage')  # Outra opção para evitar problemas de memória
+# Inicializar o driver do Firefox
+driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=firefox_options)
 
-# Usar o webdriver-manager para baixar e configurar o chromedriver automaticamente
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+# Abrir uma página como exemplo
+driver.get("http://example.com")
 
-# Acessar o YouTube
-driver.get("https://www.youtube.com")
+# Fazer algo com o driver (exemplo)
+print(driver.title)
 
-# Esperar para o usuário fazer login manualmente
-print("Por favor, faça o login manualmente no YouTube. O script irá esperar por 30 segundos após a página carregar.")
-time.sleep(10)  # Dê tempo suficiente para você fazer o login
-
-# Salvar os cookies após login
-cookies = driver.get_cookies()
-
-# Salvar os cookies em um arquivo
-with open("youtube_cookies.pkl", "wb") as cookie_file:
-    pickle.dump(cookies, cookie_file)
-
-print("Cookies salvos com sucesso!")
-
-# Fechar o navegador
+# Fechar o driver após o uso
 driver.quit()
