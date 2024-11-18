@@ -2,7 +2,7 @@
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const { DisTube } = require('distube');
 const { google } = require('googleapis'); // API do YouTube
-const MyCustomExtractor = require('./MyCustomExtractor'); // Ajuste o caminho conforme necessário
+const MyCustomExtractor = require('./myCustomExtractor'); // Ajuste o caminho conforme necessário
 
 // Caminho do FFmpeg no Windows (ajuste para o seu ambiente)
 const ffmpegPath = process.platform === 'win32' 
