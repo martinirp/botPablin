@@ -18,15 +18,13 @@ if not email or not senha:
 
 # Configurações do ChromeDriver
 options = Options()
-# Remover a linha abaixo para rodar com a interface visível
-# options.add_argument("--headless")  # Remova essa linha para deixar o navegador visível
-
+options.add_argument("--no-sandbox")  # Evitar o erro "DevToolsActivePort"
+options.add_argument("--disable-dev-shm-usage")  # Evitar uso excessivo de memória
 options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--headless")  # Opcional, se você quiser rodar sem interface gráfica
 
 # Defina o caminho correto do seu chromedriver
-service = Service('/usr/bin/chromedriver')  # Ajuste o caminho se necessário
+service = Service('/usr/lib/chromium-browser/chromedriver')  # Ajuste o caminho conforme necessário
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
