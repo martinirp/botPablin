@@ -31,9 +31,6 @@ client.slashCommands = new Collection();
 // Register prefix commands
 require('./registers/commands-register')(client);
 
-// Register slash commands
-require('./registers/slash-commands-register')(client);
-
 // Configure DisTube
 client.distube = new DisTube(client, {
     emitNewSongOnly: true,
