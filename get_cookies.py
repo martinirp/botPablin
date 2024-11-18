@@ -2,10 +2,9 @@ import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 from dotenv import load_dotenv
+import time
 
 # Carregar variáveis do arquivo .env
 load_dotenv()
@@ -18,9 +17,9 @@ if not email or not senha:
     exit(1)
 
 # Configurações do ChromeDriver
-options = webdriver.ChromeOptions()
+options = Options()
 # Remover a linha abaixo para rodar com a interface visível
-# options.add_argument("--headless")  
+# options.add_argument("--headless")  # Remova essa linha para deixar o navegador visível
 
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
@@ -34,24 +33,18 @@ try:
     # Acesse a página de login
     driver.get("https://accounts.google.com/signin")
 
-    # Preencha o e-mail
-    email_input = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.NAME, "identifier"))
-    )
-    email_input.send_keys(email)
-    email_input.send_keys(Keys.RETURN)
+    print("Aguarde, o navegador está aberto. Faça o login manualmente.")
 
-    # Aguarde a página de senha carregar
-    senha_input = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.NAME, "password"))
-    )
-    senha_input.send_keys(senha)
-    senha_input.send_keys(Keys.RETURN)
+    # Esperar um tempo para o login manual (dá tempo de você inserir o email e senha)
+    time.sleep(60)  # Ajuste o tempo conforme necessário para você realizar o login
 
-    # Aguarde o redirecionamento para a próxima página
-    WebDriverWait(driver, 10).until(
-        EC.url_contains("myaccount.google.com")  # Ajuste conforme necessário
-    )
+    # Capturar os cookies após o login
+    cookies = driver.get_cookies()
+
+    # Exibir os cookies para verificação
+    print("Cookies capturados após o login:")
+    for cookie in cookies:
+        print(cookie)
 
     print("Login concluído com sucesso!")
 
