@@ -1,13 +1,12 @@
 const { ExtractorPlugin } = require('distube');
-const ytsr = require('ytsr');
-const ytdlp = require('@distube/yt-dlp');
+const { google } = require('googleapis');
 const path = require('path');
 
 class MyCustomExtractor extends ExtractorPlugin {
     constructor(options) {
         super(options);
-        this.ytdlp = ytdlp;
-        this.ytsr = ytsr;
+        this.youtube = google.youtube('v3'); // Instancia a API do YouTube
+        this.API_KEY = 'AIzaSyC2LtwuJWKtZLMEiVlhEaFSGcxYGYNHuoA'; // Substitua pela sua chave de API
         console.log('MyCustomExtractor initialized');
     }
 
@@ -28,16 +27,24 @@ class MyCustomExtractor extends ExtractorPlugin {
     async extract(url) {
         console.log(`Extracting from URL: ${url}`);
         try {
-            // Use o arquivo cookies.txt para autenticação
-            const cookiesPath = this.getCookiesPath();
-            const info = await this.ytdlp.getInfo(url, {
-                cookies: cookiesPath,  // Passando o caminho dos cookies
+            // Aqui usamos a API do YouTube para pegar as informações do vídeo
+            const videoId = new URL(url).searchParams.get('v'); // Obtém o ID do vídeo da URL
+            const res = await this.youtube.videos.list({
+                part: 'snippet,contentDetails', // Obtém as informações do vídeo
+                id: videoId,
+                key: this.API_KEY,
             });
+            const video = res.data.items[0];
+
+            if (!video) {
+                throw new Error('Video not found');
+            }
+
             return {
-                name: info.title,
-                url: info.webpage_url,
-                thumbnail: info.thumbnail,
-                duration: info.duration,
+                name: video.snippet.title,
+                url: video.snippet.url, // URL do vídeo
+                thumbnail: video.snippet.thumbnails.default.url,
+                duration: video.contentDetails.duration, // Duração do vídeo
             };
         } catch (error) {
             console.error('Error extracting info:', error);
@@ -48,14 +55,22 @@ class MyCustomExtractor extends ExtractorPlugin {
     async search(query) {
         console.log(`Searching for query: ${query}`);
         try {
-            const results = await ytsr(query, { limit: 1 });
-            const video = results.items.find((item) => item.type === 'video');
+            const res = await this.youtube.search.list({
+                part: 'snippet',
+                q: query,
+                type: 'video',
+                maxResults: 1,
+                key: this.API_KEY,
+            });
+
+            const video = res.data.items[0];
+
             return video
                 ? {
-                    name: video.title,
-                    url: video.url,
-                    thumbnail: video.thumbnail,
-                    duration: null, // Duração pode ser obtida adicionalmente com yt-dlp se necessário
+                    name: video.snippet.title,
+                    url: `https://www.youtube.com/watch?v=${video.id.videoId}`,
+                    thumbnail: video.snippet.thumbnails.default.url,
+                    duration: null, // A duração pode ser obtida adicionalmente
                 }
                 : null;
         } catch (error) {
