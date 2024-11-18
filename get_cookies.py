@@ -12,14 +12,22 @@ load_dotenv()
 email = os.getenv("EMAIL")
 senha = os.getenv("SENHA")
 
+# Verificar se as variáveis de ambiente foram carregadas corretamente
+if not email or not senha:
+    print("Erro: As variáveis de ambiente não foram carregadas corretamente.")
+    exit(1)
+
 # Configurações do ChromeDriver
 options = webdriver.ChromeOptions()
-options.add_argument("--headless")  # Remova esta linha se quiser ver o navegador
+# Remover a linha abaixo para rodar com a interface visível
+# options.add_argument("--headless")  
+
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-service = Service('/usr/bin/chromedriver')
+# Defina o caminho correto do seu chromedriver
+service = Service('/usr/bin/chromedriver')  # Ajuste o caminho se necessário
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
@@ -51,4 +59,6 @@ except Exception as e:
     print(f"Erro: {e}")
 
 finally:
+    # Aguardar a interação manual antes de fechar o navegador
+    input("Pressione Enter para fechar o navegador...")
     driver.quit()
