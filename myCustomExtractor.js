@@ -1,3 +1,4 @@
+const axios = require('axios');
 const { ExtractorPlugin } = require('distube');
 const { google } = require('googleapis');
 const path = require('path');
@@ -27,13 +28,20 @@ class MyCustomExtractor extends ExtractorPlugin {
     async extract(url) {
         console.log(`Extracting from URL: ${url}`);
         try {
-            // Aqui usamos a API do YouTube para pegar as informações do vídeo
+            // Aqui usamos o axios para customizar a requisição
             const videoId = new URL(url).searchParams.get('v'); // Obtém o ID do vídeo da URL
-            const res = await this.youtube.videos.list({
-                part: 'snippet,contentDetails', // Obtém as informações do vídeo
-                id: videoId,
-                key: this.API_KEY,
+
+            const res = await axios.get(`https://www.googleapis.com/youtube/v3/videos`, {
+                params: {
+                    part: 'snippet,contentDetails', // Obtém as informações do vídeo
+                    id: videoId,
+                    key: this.API_KEY,
+                },
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+                }
             });
+
             const video = res.data.items[0];
 
             if (!video) {
@@ -42,7 +50,7 @@ class MyCustomExtractor extends ExtractorPlugin {
 
             return {
                 name: video.snippet.title,
-                url: video.snippet.url, // URL do vídeo
+                url: `https://www.youtube.com/watch?v=${videoId}`, // URL do vídeo
                 thumbnail: video.snippet.thumbnails.default.url,
                 duration: video.contentDetails.duration, // Duração do vídeo
             };
@@ -55,12 +63,17 @@ class MyCustomExtractor extends ExtractorPlugin {
     async search(query) {
         console.log(`Searching for query: ${query}`);
         try {
-            const res = await this.youtube.search.list({
-                part: 'snippet',
-                q: query,
-                type: 'video',
-                maxResults: 1,
-                key: this.API_KEY,
+            const res = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+                params: {
+                    part: 'snippet',
+                    q: query,
+                    type: 'video',
+                    maxResults: 1,
+                    key: this.API_KEY,
+                },
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+                }
             });
 
             const video = res.data.items[0];
