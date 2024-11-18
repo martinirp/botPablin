@@ -9,6 +9,10 @@ import pickle
 chrome_options = Options()
 chrome_options.binary_location = "/snap/bin/chromium"  # Caminho correto do Chromium no Snap
 
+# Adiciona a opção --no-sandbox
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')  # Outra opção para evitar problemas de memória
+
 # Usar o webdriver-manager para baixar e configurar o chromedriver automaticamente
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
