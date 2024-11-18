@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import time
 import pickle
@@ -6,9 +7,12 @@ import pickle
 # Caminho do ChromeDriver
 chromedriver_path = '/usr/local/bin/chromedriver'  # Modifique conforme o seu caso
 
-# Inicializar o navegador
+# Inicializar o serviço para o ChromeDriver
+service = Service(chromedriver_path)
+
+# Inicializar o navegador com o serviço
 options = webdriver.ChromeOptions()
-driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
+driver = webdriver.Chrome(service=service, options=options)
 
 # Acessar o YouTube
 driver.get("https://www.youtube.com")
