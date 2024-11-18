@@ -1,6 +1,8 @@
 // Carrega as variáveis de ambiente do arquivo .env
 require('dotenv').config();
 const ytDlp = require('yt-dlp'); // ou a ferramenta que você estiver usando
+const path = require('path'); // Para manipulação de caminhos de arquivos
+const { google } = require('googleapis'); // API do YouTube
 
 class MyCustomExtractor extends ExtractorPlugin {
     constructor(options) {
