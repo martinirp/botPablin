@@ -1,6 +1,6 @@
 // Carrega as variáveis de ambiente do arquivo .env
 require('dotenv').config();
-const ytDlp = require('yt-dlp'); // ou a ferramenta que você estiver usando
+const { exec } = require('child_process'); // Para executar comandos
 const path = require('path'); // Para manipulação de caminhos de arquivos
 const { google } = require('googleapis'); // API do YouTube
 
@@ -17,6 +17,7 @@ class MyCustomExtractor extends ExtractorPlugin {
         return path.join(__dirname, '..', 'data', 'cookies.txt');
     }
 
+    // Função de extração de vídeo usando yt-dlp via linha de comando
     async extract(url) {
         console.log(`Extracting from URL: ${url}`);
         try {
@@ -26,8 +27,26 @@ class MyCustomExtractor extends ExtractorPlugin {
                 password: process.env.SENHA,  // Sua senha do YouTube do .env
             };
 
-            const res = await ytDlp.getInfo(url, options);
-            const video = res;
+            // Comando para extrair as informações do vídeo com yt-dlp
+            const command = `yt-dlp --username ${process.env.EMAIL} --password ${process.env.SENHA} --print-json ${url}`;
+            
+            // Executa o comando yt-dlp e obtém as informações em JSON
+            const result = await new Promise((resolve, reject) => {
+                exec(command, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(`exec error: ${error}`);
+                        return;
+                    }
+                    if (stderr) {
+                        reject(`stderr: ${stderr}`);
+                        return;
+                    }
+                    resolve(stdout); // resultado do yt-dlp em formato JSON
+                });
+            });
+
+            // Faz o parse do resultado em JSON
+            const video = JSON.parse(result);
 
             if (!video) {
                 throw new Error('Video not found');
@@ -45,7 +64,7 @@ class MyCustomExtractor extends ExtractorPlugin {
         }
     }
 
-    // Função de pesquisa pode ser ajustada da mesma maneira
+    // Função de pesquisa usando a API do YouTube
     async search(query) {
         console.log(`Searching for query: ${query}`);
         try {
@@ -73,6 +92,7 @@ class MyCustomExtractor extends ExtractorPlugin {
         }
     }
 
+    // Resolve a consulta, tentando extrair como URL ou buscar por string
     async resolve(query) {
         console.log(`Resolving query: ${query}`);
         // Primeiro tenta extrair como URL
