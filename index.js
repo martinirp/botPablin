@@ -1,8 +1,7 @@
 // Require the necessary discord.js classes
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
+const { YtDlpPlugin } = require('@distube/yt-dlp');
 const { DisTube } = require('distube');
-const { google } = require('googleapis'); // API do YouTube
-const MyCustomExtractor = require('./myCustomExtractor'); // Ajuste o caminho conforme necessário
 
 // Caminho do FFmpeg no Windows (ajuste para o seu ambiente)
 const ffmpegPath = process.platform === 'win32' 
@@ -32,18 +31,18 @@ client.slashCommands = new Collection();
 // Register prefix commands
 require('./registers/commands-register')(client);
 
-// Configure DisTube com o MyCustomExtractor
+// Configure DisTube
 client.distube = new DisTube(client, {
     emitNewSongOnly: true,
     emitAddSongWhenCreatingQueue: false,
     emitAddListWhenCreatingQueue: false,
     savePreviousSongs: true,
     nsfw: true,
-    plugins: [new MyCustomExtractor()], // Usando o MyCustomExtractor
+    plugins: [new YtDlpPlugin()],
     ffmpeg: { path: ffmpegPath }, // Usa o caminho correto do FFmpeg
 });
 
-// Handle DisTube errors (sem tratar erros específicos do YouTube)
+// Handle DisTube errors (without YouTube-specific error handling)
 client.distube.on('error', async (channel, error) => {
     try {
         console.error(`Erro de DisTube: ${error.message}`);
@@ -54,12 +53,12 @@ client.distube.on('error', async (channel, error) => {
     }
 });
 
-// Quando o cliente estiver pronto, execute esse código (apenas uma vez)
+// When the client is ready, run this code (only once)
 client.once(Events.ClientReady, (c) => {
     console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
-// Registrar o comando mention
+// Register the mention command
 const mentionCommand = require('./commands/mention'); // Ajuste o caminho, se necessário
 
 client.on('messageCreate', async (message) => {

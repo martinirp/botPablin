@@ -1,62 +1,32 @@
-// Carrega as variáveis de ambiente do arquivo .env
-require('dotenv').config();
-const { exec } = require('child_process'); // Para executar comandos
-const path = require('path'); // Para manipulação de caminhos de arquivos
-const { google } = require('googleapis'); // API do YouTube
+const { ExtractorPlugin } = require('distube');
+const axios = require('axios');
+require('dotenv').config(); // Carrega as variáveis de ambiente do arquivo .env
 
 class MyCustomExtractor extends ExtractorPlugin {
     constructor(options) {
         super(options);
-        this.youtube = google.youtube('v3'); // Instancia a API do YouTube
-        this.API_KEY = process.env.API_KEY; // Sua chave de API do YouTube do .env
+        this.apiKey = process.env.YOUTUBE_API_KEY; // Certifique-se de ter sua chave no .env
         console.log('MyCustomExtractor initialized');
     }
 
-    // Caminho para o arquivo cookies.txt (se necessário)
-    getCookiesPath() {
-        return path.join(__dirname, '..', 'data', 'cookies.txt');
+    async validate(url) {
+        console.log(`Validating URL: ${url}`);
+        return (
+            url.startsWith('https://') &&
+            (url.includes('youtube.com') || url.includes('youtu.be'))
+        );
     }
 
-    // Função de extração de vídeo usando yt-dlp via linha de comando
     async extract(url) {
         console.log(`Extracting from URL: ${url}`);
         try {
-            // Passando o username e a password diretamente usando as variáveis de ambiente
-            const options = {
-                username: process.env.EMAIL,  // Seu email do YouTube do .env
-                password: process.env.SENHA,  // Sua senha do YouTube do .env
-            };
-
-            // Comando para extrair as informações do vídeo com yt-dlp
-            const command = `yt-dlp --username ${process.env.EMAIL} --password ${process.env.SENHA} --print-json ${url}`;
-            
-            // Executa o comando yt-dlp e obtém as informações em JSON
-            const result = await new Promise((resolve, reject) => {
-                exec(command, (error, stdout, stderr) => {
-                    if (error) {
-                        reject(`exec error: ${error}`);
-                        return;
-                    }
-                    if (stderr) {
-                        reject(`stderr: ${stderr}`);
-                        return;
-                    }
-                    resolve(stdout); // resultado do yt-dlp em formato JSON
-                });
-            });
-
-            // Faz o parse do resultado em JSON
-            const video = JSON.parse(result);
-
-            if (!video) {
-                throw new Error('Video not found');
-            }
-
+            const videoId = this.getVideoId(url);
+            const info = await this.fetchVideoInfo(videoId);
             return {
-                name: video.title,
-                url: video.url,
-                thumbnail: video.thumbnail,
-                duration: video.duration,
+                name: info.title,
+                url: `https://www.youtube.com/watch?v=${videoId}`,
+                thumbnail: info.thumbnail,
+                duration: info.duration,
             };
         } catch (error) {
             console.error('Error extracting info:', error);
@@ -64,44 +34,97 @@ class MyCustomExtractor extends ExtractorPlugin {
         }
     }
 
-    // Função de pesquisa usando a API do YouTube
     async search(query) {
         console.log(`Searching for query: ${query}`);
         try {
-            const res = await this.youtube.search.list({
-                part: 'snippet',
-                q: query,
-                type: 'video',
-                maxResults: 1,
-                key: this.API_KEY, // Chave de API do .env
-            });
-
-            const video = res.data.items[0];
-
-            return video
-                ? {
-                    name: video.snippet.title,
-                    url: `https://www.youtube.com/watch?v=${video.id.videoId}`,
-                    thumbnail: video.snippet.thumbnails.default.url,
-                    duration: null, // A duração pode ser obtida adicionalmente
+            const response = await axios.get(
+                `https://www.googleapis.com/youtube/v3/search`,
+                {
+                    params: {
+                        key: this.apiKey,
+                        part: 'snippet',
+                        q: query,
+                        type: 'video',
+                        maxResults: 1,
+                    },
                 }
-                : null;
+            );
+
+            const video = response.data.items[0];
+            if (video) {
+                const videoId = video.id.videoId;
+                const info = await this.fetchVideoInfo(videoId);
+                return {
+                    name: info.title,
+                    url: `https://www.youtube.com/watch?v=${videoId}`,
+                    thumbnail: info.thumbnail,
+                    duration: info.duration,
+                };
+            }
+
+            return null;
         } catch (error) {
             console.error('Error searching for video:', error);
             throw error;
         }
     }
 
-    // Resolve a consulta, tentando extrair como URL ou buscar por string
     async resolve(query) {
         console.log(`Resolving query: ${query}`);
-        // Primeiro tenta extrair como URL
         if (await this.validate(query)) {
             return await this.extract(query);
         }
 
-        // Caso não seja uma URL, tenta buscar por string
         return await this.search(query);
+    }
+
+    getVideoId(url) {
+        const match = url.match(
+            /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
+        );
+        return match ? match[1] : null;
+    }
+
+    async fetchVideoInfo(videoId) {
+        try {
+            const response = await axios.get(
+                `https://www.googleapis.com/youtube/v3/videos`,
+                {
+                    params: {
+                        key: this.apiKey,
+                        part: 'snippet,contentDetails',
+                        id: videoId,
+                    },
+                }
+            );
+
+            const video = response.data.items[0];
+            if (video) {
+                const duration = this.parseDuration(
+                    video.contentDetails.duration
+                );
+                return {
+                    title: video.snippet.title,
+                    thumbnail: video.snippet.thumbnails.default.url,
+                    duration: duration,
+                };
+            }
+
+            throw new Error('Video not found');
+        } catch (error) {
+            console.error('Error fetching video info:', error);
+            throw error;
+        }
+    }
+
+    parseDuration(duration) {
+        const match = duration.match(
+            /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
+        );
+        const hours = parseInt(match[1] || '0', 10);
+        const minutes = parseInt(match[2] || '0', 10);
+        const seconds = parseInt(match[3] || '0', 10);
+        return hours * 3600 + minutes * 60 + seconds;
     }
 }
 
