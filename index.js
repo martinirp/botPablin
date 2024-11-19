@@ -79,7 +79,7 @@ client.distube.on('error', async (channel, error) => {
 client.once(Events.ClientReady, async (c) => {
     console.log(`Bot online! Conectado como ${c.user.tag}`);
 
-    // Caminho absoluto do arquivo .ovpn dentro da pasta 'data'
+    // Caminho do arquivo .ovpn dentro da pasta 'data' (relativo à pasta do bot)
     const vpnConfigPath = path.join(__dirname, 'data', 'vpn.ovpn');
     console.log(`Usando o arquivo de configuração VPN: ${vpnConfigPath}`);
 
@@ -101,7 +101,16 @@ client.once(Events.ClientReady, async (c) => {
         console.log(`Conexão VPN estabelecida com sucesso!`);
         console.log(`stdout: ${stdout}`);
     });
+
+    // Executando comandos adicionais após o bot iniciar
+    executarComandosAdicionais();
 });
+
+async function executarComandosAdicionais() {
+    // Exemplo de comando adicional após iniciar
+    console.log('Executando comandos adicionais após o bot iniciar...');
+    // Adicione outras funções ou comandos que você deseja executar após o bot ficar online
+}
 
 // Register the mention command
 const mentionCommand = require('./commands/mention'); // Ajuste o caminho, se necessário
