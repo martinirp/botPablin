@@ -12,7 +12,7 @@ const ffmpegPath = process.platform === 'win32'
 require('dotenv').config();
 
 const token = process.env.DISCORD_TOKEN;
-const isDockerDeploy = process.env.DOCKER_DEPLOY === 'true';
+const proxy = process.env.PROXY_URL || 'http://45.77.89.0:8080'; // Proxy padrão ou via .env
 
 // Create a new client instance
 const client = new Client({
@@ -38,18 +38,26 @@ client.distube = new DisTube(client, {
     emitAddListWhenCreatingQueue: false,
     savePreviousSongs: true,
     nsfw: true,
-    plugins: [new YtDlpPlugin()],
+    plugins: [
+        new YtDlpPlugin({
+            ytDownloadOptions: {
+                proxy: proxy, // Adiciona o suporte ao proxy
+            },
+        }),
+    ],
     ffmpeg: { path: ffmpegPath }, // Usa o caminho correto do FFmpeg
 });
 
-// Handle DisTube errors (without YouTube-specific error handling)
+// Handle DisTube errors (including YouTube restrictions)
 client.distube.on('error', async (channel, error) => {
     try {
         console.error(`Erro de DisTube: ${error.message}`);
-        await channel.send('Ocorreu um erro ao tentar reproduzir o vídeo.');
+        await channel.send('Ocorreu um erro ao tentar reproduzir o vídeo. Certifique-se de que o link é válido.');
     } catch (e) {
         console.error(`Erro ao lidar com erro do DisTube: ${e.message}`);
-        await channel.send('Ocorreu um erro inesperado ao lidar com a reprodução.');
+        if (channel) {
+            await channel.send('Ocorreu um erro inesperado ao lidar com a reprodução.');
+        }
     }
 });
 
