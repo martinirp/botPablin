@@ -2,6 +2,9 @@
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 const { DisTube } = require('distube');
+const axios = require('axios');
+const { exec } = require('child_process');
+const path = require('path');
 
 // Caminho do FFmpeg no Windows (ajuste para o seu ambiente)
 const ffmpegPath = process.platform === 'win32' 
@@ -12,7 +15,19 @@ const ffmpegPath = process.platform === 'win32'
 require('dotenv').config();
 
 const token = process.env.DISCORD_TOKEN;
-const proxy = process.env.PROXY_URL || 'http://45.77.89.0:8080'; // Proxy padrão ou via .env
+const proxy = process.env.PROXY_URL;
+
+// Logando qual proxy está sendo usado
+console.log(`Using proxy: ${proxy}`);
+
+// Testando a conexão com o proxy fazendo uma requisição simples para o Google
+axios.get('http://www.google.com', { proxy: { host: '45.77.89.0', port: 8080 } })
+    .then(response => {
+        console.log('Conectado ao proxy com sucesso!', response.status);
+    })
+    .catch(error => {
+        console.error('Erro ao conectar ao proxy:', error.message);
+    });
 
 // Create a new client instance
 const client = new Client({
@@ -61,9 +76,29 @@ client.distube.on('error', async (channel, error) => {
     }
 });
 
-// When the client is ready, run this code (only once)
-client.once(Events.ClientReady, (c) => {
-    console.log(`Ready! Logged in as ${c.user.tag}`);
+// Quando o bot estiver pronto, execute este código
+client.once(Events.ClientReady, async (c) => {
+    console.log(`Bot online! Conectado como ${c.user.tag}`);
+
+    // Caminho absoluto do arquivo .ovpn dentro da pasta 'data'
+    const vpnConfigPath = path.join(__dirname, 'data', 'vpn.ovpn');
+
+    // Comando para executar o OpenVPN com o arquivo .ovpn
+    const openvpnCommand = `openvpn --config ${vpnConfigPath}`;
+
+    // Executar o script de VPN após o bot iniciar
+    exec(openvpnCommand, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Erro ao conectar à VPN: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`stderr: ${stderr}`);
+            return;
+        }
+        console.log(`Conexão VPN estabelecida com sucesso!`);
+        console.log(`stdout: ${stdout}`);
+    });
 });
 
 // Register the mention command
