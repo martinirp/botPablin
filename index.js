@@ -78,39 +78,8 @@ client.distube.on('error', async (channel, error) => {
 // Quando o bot estiver pronto, execute este código
 client.once(Events.ClientReady, async (c) => {
     console.log(`Bot online! Conectado como ${c.user.tag}`);
-
-    // Caminho do arquivo .ovpn dentro da pasta 'data' (relativo à pasta do bot)
-    const vpnConfigPath = path.join(__dirname, 'data', 'vpn.ovpn');
-    console.log(`Usando o arquivo de configuração VPN: ${vpnConfigPath}`);
-
-    // Comando para executar o OpenVPN com o arquivo .ovpn
-    const openvpnCommand = `openvpn --config "${vpnConfigPath}"`;
-
-    console.log(`Executando o comando: ${openvpnCommand}`);
-
-    // Executar o script de VPN após o bot iniciar
-    exec(openvpnCommand, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Erro ao conectar à VPN: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.error(`stderr: ${stderr}`);
-            return;
-        }
-        console.log(`Conexão VPN estabelecida com sucesso!`);
-        console.log(`stdout: ${stdout}`);
-    });
-
-    // Executando comandos adicionais após o bot iniciar
-    executarComandosAdicionais();
+    console.log('Bot pronto para executar comandos manuais!');
 });
-
-async function executarComandosAdicionais() {
-    // Exemplo de comando adicional após iniciar
-    console.log('Executando comandos adicionais após o bot iniciar...');
-    // Adicione outras funções ou comandos que você deseja executar após o bot ficar online
-}
 
 // Register the mention command
 const mentionCommand = require('./commands/mention'); // Ajuste o caminho, se necessário
