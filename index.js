@@ -1,9 +1,7 @@
+// Require the necessary discord.js classes
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 const { DisTube } = require('distube');
-const axios = require('axios');
-const { exec } = require('child_process');
-const path = require('path');
 
 // Caminho do FFmpeg no Windows (ajuste para o seu ambiente)
 const ffmpegPath = process.platform === 'win32' 
@@ -14,19 +12,7 @@ const ffmpegPath = process.platform === 'win32'
 require('dotenv').config();
 
 const token = process.env.DISCORD_TOKEN;
-const proxy = process.env.PROXY_URL;
-
-// Logando qual proxy está sendo usado
-console.log(`Using proxy: ${proxy}`);
-
-// Testando a conexão com o proxy fazendo uma requisição simples para o Google
-axios.get('http://www.google.com', { proxy: { host: '45.77.89.0', port: 8080 } })
-    .then(response => {
-        console.log('Conectado ao proxy com sucesso!', response.status);
-    })
-    .catch(error => {
-        console.error('Erro ao conectar ao proxy:', error.message);
-    });
+const proxy = process.env.PROXY_URL || 'http://45.77.89.0:8080'; // Proxy padrão ou via .env
 
 // Create a new client instance
 const client = new Client({
@@ -75,9 +61,9 @@ client.distube.on('error', async (channel, error) => {
     }
 });
 
-// Quando o bot estiver pronto, execute este código
-client.once(Events.ClientReady, async (c) => {
-    console.log(`Bot online! Conectado como ${c.user.tag}`);
+// When the client is ready, run this code (only once)
+client.once(Events.ClientReady, (c) => {
+    console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
 // Register the mention command
