@@ -4,6 +4,7 @@ const { DisTube } = require('distube');
 const axios = require('axios');
 const { exec } = require('child_process');
 const path = require('path');
+const readline = require('readline');
 
 // Caminho do FFmpeg no Windows (ajuste para o seu ambiente)
 const ffmpegPath = process.platform === 'win32' 
@@ -78,7 +79,34 @@ client.distube.on('error', async (channel, error) => {
 // Quando o bot estiver pronto, execute este código
 client.once(Events.ClientReady, async (c) => {
     console.log(`Bot online! Conectado como ${c.user.tag}`);
-    console.log('Bot pronto para executar comandos manuais!');
+    
+    // Criando interface para ler comandos manuais no terminal
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false
+    });
+
+    console.log("Você pode agora digitar comandos manualmente no terminal.");
+    
+    // Lendo comandos manuais
+    rl.on('line', (input) => {
+        // Aqui você pode processar os comandos digitados no terminal
+        console.log(`Comando manual recebido: ${input}`);
+        
+        // Exemplo de comando manual: Enviar mensagem no canal do Discord
+        if (input.startsWith('send ')) {
+            const channelId = input.split(' ')[1];
+            const message = input.slice(5 + channelId.length).trim();
+            
+            const channel = client.channels.cache.get(channelId);
+            if (channel && channel.isText()) {
+                channel.send(message);
+            } else {
+                console.log('Canal não encontrado!');
+            }
+        }
+    });
 });
 
 // Register the mention command
