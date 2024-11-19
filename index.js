@@ -1,4 +1,3 @@
-// Require the necessary discord.js classes
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 const { DisTube } = require('distube');
@@ -82,9 +81,12 @@ client.once(Events.ClientReady, async (c) => {
 
     // Caminho absoluto do arquivo .ovpn dentro da pasta 'data'
     const vpnConfigPath = path.join(__dirname, 'data', 'vpn.ovpn');
+    console.log(`Usando o arquivo de configuração VPN: ${vpnConfigPath}`);
 
     // Comando para executar o OpenVPN com o arquivo .ovpn
-    const openvpnCommand = `openvpn --config ${vpnConfigPath}`;
+    const openvpnCommand = `openvpn --config "${vpnConfigPath}"`;
+
+    console.log(`Executando o comando: ${openvpnCommand}`);
 
     // Executar o script de VPN após o bot iniciar
     exec(openvpnCommand, (error, stdout, stderr) => {
